@@ -3,7 +3,6 @@ project(lvgl)
 
 foreach(BACKEND_NAME "SDL" "LINUX_DRM" "LINUX_FBDEV" "X11" "WAYLAND")
     execute_process(COMMAND "scripts/backend_conf.sh" ${BACKEND_NAME} OUTPUT_VARIABLE IS_BACKEND_ENABLED)
-    message(STATUS "IS_BACKEND_ENABLED = ${IS_BACKEND_ENABLED}")
     set("LV_USE_${BACKEND_NAME}" ${IS_BACKEND_ENABLED})
 endforeach()
 
@@ -18,11 +17,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/build)
 add_subdirectory(lvgl)
 target_include_directories(lvgl PUBLIC ${PROJECT_SOURCE_DIR})
-
-message(STATUS "LV_USE_LINUX_DRM = ${LV_USE_LINUX_DRM}")
-message(STATUS "LV_USE_SDL = ${LV_USE_SDL}")
-message(STATUS "LV_USE_WAYLAND = ${LV_USE_WAYLAND}")
-
 
 if (LV_USE_LINUX_DRM)
 
