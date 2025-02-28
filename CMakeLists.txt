@@ -3,8 +3,11 @@ project(lvgl)
 
 foreach(BACKEND_NAME "SDL" "LINUX_DRM" "LINUX_FBDEV" "X11" "WAYLAND")
     execute_process(COMMAND "scripts/backend_conf.sh" ${BACKEND_NAME} OUTPUT_VARIABLE IS_BACKEND_ENABLED)
+    message(STATUS "IS_BACKEND_ENABLED = ${IS_BACKEND_ENABLED}")
     set("LV_USE_${BACKEND_NAME}" ${IS_BACKEND_ENABLED})
 endforeach()
+
+set(LV_USE_SDL 1)
 
 # Uncomment if the program needs debugging
 #set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O0 -ggdb")
@@ -12,9 +15,14 @@ endforeach()
 set(CMAKE_C_STANDARD 99) # LVGL officially supports C99 and above
 set(CMAKE_CXX_STANDARD 17) #C17
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
+set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/build)
 add_subdirectory(lvgl)
 target_include_directories(lvgl PUBLIC ${PROJECT_SOURCE_DIR})
+
+message(STATUS "LV_USE_LINUX_DRM = ${LV_USE_LINUX_DRM}")
+message(STATUS "LV_USE_SDL = ${LV_USE_SDL}")
+message(STATUS "LV_USE_WAYLAND = ${LV_USE_WAYLAND}")
+
 
 if (LV_USE_LINUX_DRM)
 
@@ -26,16 +34,16 @@ if (LV_USE_LINUX_DRM)
     target_link_libraries(lvglsim lvgl lvgl::examples lvgl::demos lvgl::thorvg ${LIBDRM_LIBRARIES} m pthread)
 
 elseif (LV_USE_SDL)
+    
+find_package(SDL2 REQUIRED)
 
-    find_package(PkgConfig REQUIRED)
-    pkg_check_modules(SDL2 REQUIRED sdl2)
-    pkg_check_modules(SDL2_image REQUIRED SDL2_image)
-
+    include_directories(${SDL2_INCLUDE_DIRS})
+    
     target_include_directories(lvgl PRIVATE ${SDL2_INCLUDE_DIRS})
     target_include_directories(lvgl PRIVATE ${SDL2_IMAGE_INCLUDE_DIRS})
     add_executable(lvglsim main.c mouse_cursor_icon.c)
     target_link_libraries(lvglsim lvgl lvgl::examples lvgl::demos lvgl::thorvg ${SDL2_LIBRARIES} ${SDL2_IMAGE_LIBRARIES} m pthread)
-
+    message(STATUS "LV_USE_SDL = ${LV_USE_SDL}")
 elseif (LV_USE_WAYLAND)
 
     find_package(PkgConfig REQUIRED)
@@ -58,7 +66,7 @@ elseif (LV_USE_WAYLAND)
         wayland-client wayland-cursor xkbcommon)
 
 else()
-
+    message(STATUS "FBDEV ")
     # No specific build steps required for FBDEV
     add_executable(lvglsim main.c mouse_cursor_icon.c)
     target_link_libraries(lvglsim lvgl lvgl::examples lvgl::demos lvgl::thorvg m pthread)
